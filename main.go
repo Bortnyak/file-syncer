@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"github.com/Bortnyak/file-syncer/pkg/watcher"
+)
 
 func main() {
-	fmt.Println("Init")
+	watcher.Watch()
 }
