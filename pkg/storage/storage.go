@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -31,7 +32,7 @@ func safeDelete(bucketName, path string) error {
 	}
 
 	if !exists {
-		fmt.Printf("File %s does not exist in bucket %s\n", objectName, bucketName)
+		log.Printf("File %s does not exist in bucket %s\n", objectName, bucketName)
 		return nil
 	}
 
@@ -62,24 +63,20 @@ func checkFileExists(bucketName, objectName string) (bool, error) {
 
 // uploadFile uploads an object.
 func uploadFileToStorage(bucketName, filePath string) error {
-	fmt.Println("inside Upload file to bucket in this block")
+	log.Println("inside Upload file to bucket in this block")
 	objectName := getFileNameFromPath(filePath)
 	// Create a context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*50)
 	defer cancel()
 
-	fmt.Println("objectName = ", objectName)
+	log.Println("objectName = ", objectName)
 
 	// Create a client
 	client, err := storage.NewClient(ctx)
-	fmt.Println("after NewClient")
 	if err != nil {
-		fmt.Println("inside error block")
-		fmt.Println("error = ", err)
 		return fmt.Errorf("storage.NewClient: %v", err)
 	}
 	defer client.Close()
-	fmt.Println("client is created")
 
 	// Open the local file
 	file, err := os.Open(filePath)
@@ -87,7 +84,6 @@ func uploadFileToStorage(bucketName, filePath string) error {
 		return fmt.Errorf("os.Open: %v", err)
 	}
 	defer file.Close()
-	fmt.Println("File is opened")
 
 	// Get bucket handle
 	bucket := client.Bucket(bucketName)
@@ -103,21 +99,17 @@ func uploadFileToStorage(bucketName, filePath string) error {
 		"upload-time": time.Now().Format(time.RFC3339),
 	}
 
-	fmt.Println("Before copying")
-
 	// Copy file content to GCS
 	if _, err := io.Copy(writer, file); err != nil {
 		return fmt.Errorf("io.Copy: %v", err)
 	}
-
-	fmt.Println("After copying")
 
 	// Close the writer to finalize the upload
 	if err := writer.Close(); err != nil {
 		return fmt.Errorf("Writer.Close: %v", err)
 	}
 
-	fmt.Printf("File %s uploaded to bucket %s as %s\n", filePath, bucketName, objectName)
+	log.Printf("File %s uploaded to bucket %s as %s\n", filePath, bucketName, objectName)
 	return nil
 }
 
@@ -138,7 +130,7 @@ func deleteFileFromStorage(bucketName, objectName string) error {
 		return fmt.Errorf("Object(%q).Delete: %v", objectName, err)
 	}
 
-	fmt.Printf("File %s deleted from bucket %s\n", objectName, bucketName)
+	log.Printf("File %s deleted from bucket %s\n", objectName, bucketName)
 	return nil
 
 }

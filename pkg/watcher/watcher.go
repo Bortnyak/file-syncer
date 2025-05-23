@@ -72,27 +72,30 @@ func Watch() {
 }
 
 func eventHandler(event watcher.Event) {
-	fmt.Println("event fired")
-	fmt.Println("Here is the event = ", event)
+	log.Println("eventHandler started")
+	log.Println("Event = ", event)
 
 	// operations decalted with iotas:
 	// const (
-	// 	Create Op = iota
-	// 	Write
-	// 	Remove
-	// 	Rename
-	// 	Chmod
-	// 	Move
+	// 	Create Op = iota 0
+	// 	Write            1
+	// 	Remove           2
+	// 	Rename           3
+	// 	Chmod            4
+	// 	Move             5
 	// )
-	if event.Op == 0 {
-		fmt.Println("Upload file to bucket in this block")
-		fmt.Println("|----------------------------------|")
+	switch operation := event.Op; operation {
+	case 0:
+		log.Println("|----------------------------------|")
+		log.Println("Upload file to bucket")
 		storage.UploadFile(event.Path)
-	}
-
-	if event.Op == 2 {
-		fmt.Println("Remove file from the bucket in this block")
+	case 1:
+		log.Println("|----------------------------------|")
+		log.Println("Write file to bucket")
+		storage.UploadFile(event.Path)
+	case 2:
+		log.Println("|----------------------------------|")
+		log.Println("Remove file from the bucket")
 		storage.DeleteFile(event.Path)
 	}
-
 }
