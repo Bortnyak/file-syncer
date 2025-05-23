@@ -75,14 +75,14 @@ func eventHandler(event watcher.Event) {
 	log.Println("eventHandler started")
 	log.Println("Event = ", event)
 
-	// operations decalted with iotas:
+	// operations declared by iotas:
 	// const (
-	// 	Create Op = iota 0
-	// 	Write            1
-	// 	Remove           2
-	// 	Rename           3
-	// 	Chmod            4
-	// 	Move             5
+	// 	Create Op = iota (0)
+	// 	Write            (1)
+	// 	Remove           (2)
+	// 	Rename           (3)
+	// 	Chmod            (4)
+	// 	Move             (5)
 	// )
 	switch operation := event.Op; operation {
 	case 0:
