@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,6 +24,11 @@ type Event struct {
 
 	// Total client connections
 	TotalClients map[chan string]bool
+}
+
+type EventMessage struct {
+	Event string
+	Info  string
 }
 
 // New event messages are broadcast to all registered client connection channels
@@ -47,7 +53,7 @@ func Main() {
 
 	// Basic Authentication
 	authorized := router.Group("/", gin.BasicAuth(gin.Accounts{
-		"": "", // TODO: change basic auth to something else
+		"admin": "admin123", // TODO: change basic auth to something else
 	}))
 
 	// Authorized client can stream the event
@@ -69,6 +75,15 @@ func Main() {
 			}
 			return false
 		})
+	})
+
+	authorized.POST("/sync", func(c *gin.Context) {
+		var eventMessage EventMessage
+		c.BindJSON(&eventMessage)
+		log.Println("Body = ", &eventMessage)
+
+		stream.Message <- eventMessage.Event + " " + eventMessage.Info
+		c.JSON(http.StatusOK, gin.H{"success": "true"})
 	})
 
 	router.Run(":8085")

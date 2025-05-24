@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/Bortnyak/file-syncer/pkg/client"
 	"github.com/Bortnyak/file-syncer/pkg/storage"
 	"github.com/radovskyb/watcher"
 )
@@ -89,6 +90,12 @@ func eventHandler(event watcher.Event) {
 		log.Println("|----------------------------------|")
 		log.Println("Upload file to bucket")
 		storage.UploadFile(event.Path)
+		eventPayload := client.UpdateEventPayload{
+			Event: "Create",
+			Info:  event.Path,
+		}
+		client.SendUpdate(&eventPayload)
+
 	case 1:
 		log.Println("|----------------------------------|")
 		log.Println("Write file to bucket")

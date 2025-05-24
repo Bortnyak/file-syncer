@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -14,6 +15,41 @@ import (
 
 // TODO: move to env
 const BUCKET_NAME = "files-test-bucket"
+const DEST_DIR = "/Users/vbortniak/Projects/file-syncer/test-folder"
+
+func DownloadFile(objectName string) error {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return fmt.Errorf("storage.NewClient: %v", err)
+	}
+	defer client.Close()
+
+	// Create the full destination path
+	destPath := filepath.Join(DEST_DIR, filepath.Base(objectName))
+
+	// Create the destination file
+	f, err := os.Create(destPath)
+	if err != nil {
+		return fmt.Errorf("os.Create: %v", err)
+	}
+	defer f.Close()
+
+	// Get object from bucket
+	rc, err := client.Bucket(BUCKET_NAME).Object(objectName).NewReader(ctx)
+	if err != nil {
+		return fmt.Errorf("Object(%q).NewReader: %v", objectName, err)
+	}
+	defer rc.Close()
+
+	// Copy data to local file
+	if _, err := io.Copy(f, rc); err != nil {
+		return fmt.Errorf("io.Copy: %v", err)
+	}
+
+	fmt.Printf("File %v downloaded to %v\n", objectName, destPath)
+	return nil
+}
 
 func UploadFile(path string) {
 	uploadFileToStorage(BUCKET_NAME, path)
