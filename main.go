@@ -1,9 +1,11 @@
 package main
 
 import (
+	"github.com/Bortnyak/file-syncer/pkg/server"
 	"github.com/Bortnyak/file-syncer/pkg/watcher"
 )
 
 func main() {
-	watcher.Watch()
+	go watcher.Watch()
+	server.Main()
 }
