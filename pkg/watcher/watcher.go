@@ -1,6 +1,7 @@
 package watcher
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-func Watch() error {
+func Watch(ctx context.Context) error {
 	w := watcher.New()
 	// SetMaxEvents to 1 to allow at most 1 event's to be received
 	// on the Event channel per watching cycle.
@@ -38,13 +39,17 @@ func Watch() error {
 				log.Fatalln(err)
 			case <-w.Closed:
 				return
+			case <-ctx.Done():
+				return
 			}
+
 		}
 	}()
 
 	// Watch this folder for changes.
 	if err := w.AddRecursive("./test-folder"); err != nil {
-		log.Fatalln(err)
+		log.Println("Error while addidng folder to watcher, ", err)
+		return err
 	}
 
 	// Watch test_folder recursively for changes.
@@ -55,7 +60,7 @@ func Watch() error {
 	// Print a list of all of the files and folders currently
 	// being watched and their paths.
 	for path, f := range w.WatchedFiles() {
-		fmt.Printf("%s: %s\n", path, f.Name())
+		log.Println("watched = ", path, f.Name())
 	}
 
 	fmt.Println()
@@ -66,9 +71,19 @@ func Watch() error {
 	// 	w.TriggerEvent(watcher.Remove, nil)
 	// }()
 
-	// Start the watching process - it'll check for changes every 100ms.
-	if err := w.Start(time.Millisecond * 100); err != nil {
-		log.Fatalln(err)
+	done := make(chan struct{})
+	go func() {
+		// Start the watching process - it'll check for changes every 100ms.
+		if err := w.Start(time.Millisecond * 100); err != nil {
+			done <- struct{}{}
+		}
+	}()
+
+	select {
+	case <-done:
+		break
+	case <-ctx.Done():
+		break
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -34,7 +35,7 @@ type EventMessage struct {
 // New event messages are broadcast to all registered client connection channels
 type ClientChan chan string
 
-func StartServer() {
+func StartServer(ctx context.Context) error {
 	router := gin.Default()
 	stream := NewServer()
 	log.Println("The server is listening")
@@ -86,7 +87,20 @@ func StartServer() {
 		c.JSON(http.StatusOK, gin.H{"success": "true"})
 	})
 
-	router.Run(":8085")
+	done := make(chan struct{})
+	go func() {
+		router.Run(":8085")
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-done:
+		break
+	case <-ctx.Done():
+		break
+	}
+
+	return nil
 }
 
 func NewServer() (event *Event) {
