@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Bortnyak/file-syncer/pkg/config"
 	"github.com/Bortnyak/file-syncer/pkg/storage"
 	"github.com/r3labs/sse"
 )
@@ -18,6 +19,11 @@ import (
 type UpdateEventPayload struct {
 	Event string `json:"event"`
 	Info  string `json:"info"`
+}
+
+func StartClient() {
+	config.LoadConfig()
+	go listenToUpdates()
 }
 
 func SendUpdate(payload *UpdateEventPayload) {
@@ -53,7 +59,7 @@ func SendUpdate(payload *UpdateEventPayload) {
 	fmt.Printf("Body: %s\n", string(resBody))
 }
 
-func ListenToUpdates() {
+func listenToUpdates() {
 	events := make(chan *sse.Event)
 	client := getSSEClient()
 	client.SubscribeChan("message", events)

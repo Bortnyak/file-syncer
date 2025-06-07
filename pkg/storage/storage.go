@@ -11,11 +11,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/Bortnyak/file-syncer/pkg/config"
 )
-
-// TODO: move to env
-const BUCKET_NAME = "files-test-bucket"
-const DEST_DIR = "/Users/vbortniak/Projects/file-syncer/test-folder"
 
 func DownloadFile(objectName string) error {
 	ctx := context.Background()
@@ -26,7 +23,7 @@ func DownloadFile(objectName string) error {
 	defer client.Close()
 
 	// Create the full destination path
-	destPath := filepath.Join(DEST_DIR, filepath.Base(objectName))
+	destPath := filepath.Join(config.SYNCER_WORK_DIR_ENV, filepath.Base(objectName))
 
 	// Create the destination file
 	f, err := os.Create(destPath)
@@ -36,7 +33,7 @@ func DownloadFile(objectName string) error {
 	defer f.Close()
 
 	// Get object from bucket
-	rc, err := client.Bucket(BUCKET_NAME).Object(objectName).NewReader(ctx)
+	rc, err := client.Bucket(config.SYNCER_BUCKET_NAME_ENV).Object(objectName).NewReader(ctx)
 	if err != nil {
 		return fmt.Errorf("Object(%q).NewReader: %v", objectName, err)
 	}
@@ -51,28 +48,32 @@ func DownloadFile(objectName string) error {
 	return nil
 }
 
-func UploadFile(path string) {
-	uploadFileToStorage(BUCKET_NAME, path)
+func UploadFile(path string) error {
+	err := uploadFileToStorage(path)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 func DeleteFile(path string) {
-	safeDelete(BUCKET_NAME, path)
+	safeDelete(path)
 }
 
 // safeDelete checks if file exists before deleting
-func safeDelete(bucketName, path string) error {
+func safeDelete(path string) error {
 	objectName := getFileNameFromPath(path)
 
-	exists, err := checkFileExists(bucketName, objectName)
+	exists, err := checkFileExists(os.Getenv(config.SYNCER_BUCKET_NAME_ENV), objectName)
 	if err != nil {
 		return fmt.Errorf("error checking file existence: %v", err)
 	}
 
 	if !exists {
-		log.Printf("File %s does not exist in bucket %s\n", objectName, bucketName)
+		log.Printf("File %s does not exist in bucket %s\n", objectName, os.Getenv(config.SYNCER_BUCKET_NAME_ENV))
 		return nil
 	}
 
-	return deleteFileFromStorage(bucketName, objectName)
+	return deleteFileFromStorage(objectName)
 }
 
 // checkFileExists checks if a file exists before attempting deletion
@@ -98,7 +99,7 @@ func checkFileExists(bucketName, objectName string) (bool, error) {
 }
 
 // uploadFile uploads an object.
-func uploadFileToStorage(bucketName, filePath string) error {
+func uploadFileToStorage(filePath string) error {
 	log.Println("inside Upload file to bucket in this block")
 	objectName := getFileNameFromPath(filePath)
 	// Create a context with timeout
@@ -122,7 +123,7 @@ func uploadFileToStorage(bucketName, filePath string) error {
 	defer file.Close()
 
 	// Get bucket handle
-	bucket := client.Bucket(bucketName)
+	bucket := client.Bucket(os.Getenv(config.SYNCER_BUCKET_NAME_ENV))
 
 	// Create object handle and writer
 	obj := bucket.Object(objectName)
@@ -145,12 +146,12 @@ func uploadFileToStorage(bucketName, filePath string) error {
 		return fmt.Errorf("Writer.Close: %v", err)
 	}
 
-	log.Printf("File %s uploaded to bucket %s as %s\n", filePath, bucketName, objectName)
+	log.Printf("File %s uploaded to bucket %s as %s\n", filePath, os.Getenv(config.SYNCER_BUCKET_NAME_ENV), objectName)
 	return nil
 }
 
 // deleteFile deletes a single file from GCS
-func deleteFileFromStorage(bucketName, objectName string) error {
+func deleteFileFromStorage(objectName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
@@ -161,12 +162,12 @@ func deleteFileFromStorage(bucketName, objectName string) error {
 	defer client.Close()
 
 	// Get object handle and delete
-	obj := client.Bucket(bucketName).Object(objectName)
+	obj := client.Bucket(os.Getenv(config.SYNCER_BUCKET_NAME_ENV)).Object(objectName)
 	if err := obj.Delete(ctx); err != nil {
 		return fmt.Errorf("Object(%q).Delete: %v", objectName, err)
 	}
 
-	log.Printf("File %s deleted from bucket %s\n", objectName, bucketName)
+	log.Printf("File %s deleted from bucket %s\n", objectName, os.Getenv(config.SYNCER_BUCKET_NAME_ENV))
 	return nil
 
 }

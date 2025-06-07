@@ -13,8 +13,8 @@ func Run() {
 
 	wg.Add(3)
 	go watcher.Watch()
-	go server.Main()
-	go client.ListenToUpdates()
+	go server.StartServer()
+	go client.StartClient()
 
 	wg.Wait()
 }

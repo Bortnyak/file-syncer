@@ -10,7 +10,7 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-func Watch() {
+func Watch() error {
 	w := watcher.New()
 	// SetMaxEvents to 1 to allow at most 1 event's to be received
 	// on the Event channel per watching cycle.
@@ -70,6 +70,8 @@ func Watch() {
 	if err := w.Start(time.Millisecond * 100); err != nil {
 		log.Fatalln(err)
 	}
+
+	return nil
 }
 
 func eventHandler(event watcher.Event) {
@@ -89,7 +91,12 @@ func eventHandler(event watcher.Event) {
 	case 0:
 		log.Println("|----------------------------------|")
 		log.Println("Upload file to bucket")
-		storage.UploadFile(event.Path)
+		err := storage.UploadFile(event.Path)
+		if err != nil {
+			log.Println("Error while uploading file: ", err)
+			return
+		}
+
 		eventPayload := client.UpdateEventPayload{
 			Event: "Create",
 			Info:  event.Path,

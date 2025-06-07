@@ -1,0 +1,3 @@
+bucket_name: "files-test-bucket"
+work_dir: "/Users/vbortniak/Projects/file-syncer/test-folder"
+cloud_config_path: "/some/path/to/config/file/file-syncer-creds.json"
