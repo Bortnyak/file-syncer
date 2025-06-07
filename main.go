@@ -1,15 +1,9 @@
 package main
 
 import (
-	"github.com/Bortnyak/file-syncer/pkg/client"
-	"github.com/Bortnyak/file-syncer/pkg/server"
-	"github.com/Bortnyak/file-syncer/pkg/watcher"
+	"github.com/Bortnyak/file-syncer/cmd/syncer"
 )
 
 func main() {
-	go watcher.Watch()
-	go server.Main()
-	go client.ListenToUpdates()
-
-	select {}
+	syncer.Run()
 }
