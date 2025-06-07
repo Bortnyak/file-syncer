@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -21,9 +22,15 @@ type UpdateEventPayload struct {
 	Info  string `json:"info"`
 }
 
-func StartClient() {
+func StartClient(ctx context.Context) error {
 	config.LoadConfig()
-	go listenToUpdates()
+
+	err := listenToUpdates(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func SendUpdate(payload *UpdateEventPayload) {
@@ -59,13 +66,20 @@ func SendUpdate(payload *UpdateEventPayload) {
 	fmt.Printf("Body: %s\n", string(resBody))
 }
 
-func listenToUpdates() {
+func listenToUpdates(ctx context.Context) error {
 	events := make(chan *sse.Event)
 	client := getSSEClient()
 	client.SubscribeChan("message", events)
 
 	for {
-		message := <-events
+		var message *sse.Event
+
+		select {
+		case message = <-events:
+		case <-ctx.Done():
+			return nil
+		}
+
 		fmt.Println("message from sse ")
 		// fmt.Println("event: ", string(message.Event))
 		dataStr := string(message.Data)
