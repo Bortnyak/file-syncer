@@ -34,7 +34,7 @@ type EventMessage struct {
 // New event messages are broadcast to all registered client connection channels
 type ClientChan chan string
 
-func Main() {
+func StartServer() {
 	router := gin.Default()
 	stream := NewServer()
 	log.Println("The server is listening")
