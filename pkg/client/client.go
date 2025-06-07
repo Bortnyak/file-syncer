@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Bortnyak/file-syncer/pkg/config"
 	"github.com/Bortnyak/file-syncer/pkg/storage"
 	"github.com/r3labs/sse"
 )
@@ -23,8 +22,6 @@ type UpdateEventPayload struct {
 }
 
 func StartClient(ctx context.Context) error {
-	config.LoadConfig()
-
 	err := listenToUpdates(ctx)
 	if err != nil {
 		return err

@@ -18,11 +18,11 @@ const SYNCER_BUCKET_NAME_ENV = "SYNCER_BUCKET_NAME"
 const SYNCER_WORK_DIR_ENV = "SYNCER_WORK_DIR"
 const CONFIG_FILE_NAME = "config.yml"
 
-func LoadConfig() (*Config, error) {
+func LoadConfig() error {
 	yamlData, err := os.ReadFile(CONFIG_FILE_NAME)
 	if err != nil {
 		log.Fatal("Error while reading app config file", err)
-		return nil, err
+		return err
 	}
 
 	config := Config{}
@@ -32,7 +32,7 @@ func LoadConfig() (*Config, error) {
 	config.setConfigToEnv()
 	os.Environ()
 
-	return &config, nil
+	return nil
 }
 
 func (c *Config) GetCloudConfigPath() string {

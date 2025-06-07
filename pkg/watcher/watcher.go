@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/Bortnyak/file-syncer/pkg/client"
+	"github.com/Bortnyak/file-syncer/pkg/config"
 	"github.com/Bortnyak/file-syncer/pkg/storage"
 	"github.com/radovskyb/watcher"
 )
@@ -47,7 +49,7 @@ func Watch(ctx context.Context) error {
 	}()
 
 	// Watch this folder for changes.
-	if err := w.AddRecursive("./test-folder"); err != nil {
+	if err := w.AddRecursive(os.Getenv(config.SYNCER_WORK_DIR_ENV)); err != nil {
 		log.Println("Error while addidng folder to watcher, ", err)
 		return err
 	}

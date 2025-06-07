@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/Bortnyak/file-syncer/pkg/client"
+	"github.com/Bortnyak/file-syncer/pkg/config"
 	"github.com/Bortnyak/file-syncer/pkg/server"
 	"github.com/Bortnyak/file-syncer/pkg/watcher"
 	"golang.org/x/sync/errgroup"
@@ -15,8 +16,14 @@ import (
 
 var ErrTerm = errors.New("termination")
 
-func Run() {
+func Run() error {
 	log.Println("Syncer is starting.....")
+
+	err := config.LoadConfig()
+	if err != nil {
+		log.Println("Failed to load config, ", err)
+		return err
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	eg, ctx := errgroup.WithContext(ctx)
@@ -49,4 +56,6 @@ func Run() {
 			log.Println("Shutting down due to error: ", err)
 		}
 	}
+
+	return nil
 }
