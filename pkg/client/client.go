@@ -27,6 +27,11 @@ func StartClient(ctx context.Context) error {
 		return err
 	}
 
+	pullErr := pull()
+	if pullErr != nil {
+		return pullErr
+	}
+
 	return nil
 }
 
@@ -106,4 +111,13 @@ func getSSEClient() *sse.Client {
 	}
 
 	return client
+}
+
+func pull() error {
+	err := storage.GetList()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

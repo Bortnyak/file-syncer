@@ -12,6 +12,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/Bortnyak/file-syncer/pkg/config"
+	"google.golang.org/api/iterator"
 )
 
 func DownloadFile(objectName string) error {
@@ -55,6 +56,7 @@ func UploadFile(path string) error {
 	}
 	return nil
 }
+
 func DeleteFile(path string) {
 	safeDelete(path)
 }
@@ -175,4 +177,36 @@ func deleteFileFromStorage(objectName string) error {
 func getFileNameFromPath(path string) string {
 	parts := strings.Split(path, "/")
 	return parts[len(parts)-1]
+}
+
+func GetList() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Println("Error while creating storage client")
+		return err
+	}
+	defer client.Close()
+
+	bkt := client.Bucket(os.Getenv(config.SYNCER_BUCKET_NAME_ENV))
+
+	query := &storage.Query{Prefix: ""}
+	var names []string
+	it := bkt.Objects(ctx, query)
+	for {
+		attrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		names = append(names, attrs.Name)
+	}
+
+	log.Println("Files in bucket = ", names)
+
+	return nil
 }
